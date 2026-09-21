@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b7a53" />
+  <meta name="description" content="A child-friendly climate change learning app for children in Nigeria." />
+  <link rel="manifest" href="manifest.json" />
+  <title>Climate Kids Nigeria</title>
+  <style>
+    :root {
+      --green: #0b7a53;
+      --green2: #19a974;
+      --light: #effaf5;
+      --yellow: #ffd166;
+      --blue: #4dabf7;
+      --dark: #18352b;
+      --muted: #5c7469;
+      --white: #fff;
+      --danger: #d9534f;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--dark);
+      background: linear-gradient(180deg, #effaf5 0%, #f9fffc 100%);
+    }
+    header {
+      background: var(--green);
+      color: white;
+      padding: 18px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: 0 2px 10px rgba(0,0,0,.12);
+    }
+    .topbar {
+      max-width: 980px;
+      margin: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand { font-weight: 800; font-size: 1.2rem; }
+    select, button {
+      font: inherit;
+    }
+    select {
+      border: 0;
+      border-radius: 12px;
+      padding: 9px 10px;
+    }
+    main { max-width: 980px; margin: auto; padding: 18px; }
+    .hero {
+      background: white;
+      border-radius: 22px;
+      padding: 24px;
+      box-shadow: 0 8px 30px rgba(8,79,52,.08);
+      margin-bottom: 18px;
+    }
+    .hero h1 { margin: 0 0 10px; font-size: clamp(1.8rem, 5vw, 3rem); }
+    .hero p { color: var(--muted); line-height: 1.6; }
+    .badge {
+      display: inline-block; background: var(--yellow); color: #4f4000;
+      padding: 7px 11px; border-radius: 999px; font-weight: 700; margin-bottom: 10px;
+    }
+    .grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 15px;
+    }
+    .card {
+      background: white; border-radius: 18px; padding: 18px;
+      box-shadow: 0 6px 24px rgba(8,79,52,.07);
+    }
+    .card h3 { margin-top: 0; }
+    .icon { font-size: 2rem; }
+    .lesson, .quiz, .actions { margin-top: 18px; }
+    .lesson-content { line-height: 1.7; color: #355347; }
+    .lesson-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+    .btn {
+      border: 0; border-radius: 12px; padding: 11px 14px; cursor: pointer;
+      font-weight: 700;
+    }
+    .btn-primary { background: var(--green); color: white; }
+    .btn-secondary { background: var(--light); color: var(--green); }
+    .btn-yellow { background: var(--yellow); color: #4f4000; }
+    .progress-wrap { margin-top: 12px; }
+    progress { width: 100%; height: 16px; }
+    .quiz-option {
+      display: block; width: 100%; text-align: left; margin: 8px 0;
+      background: #f7fbf9; border: 1px solid #d9eee5;
+    }
+    .quiz-option.correct { background: #dff7e9; border-color: #6bcf99; }
+    .quiz-option.wrong { background: #fde8e7; border-color: #e49a96; }
+    .small { color: var(--muted); font-size: .92rem; }
+    .action-row {
+      display:flex; align-items:center; gap:10px; padding:10px 0;
+      border-bottom:1px solid #edf4f0;
+    }
+    .action-row:last-child { border-bottom:0; }
+    footer { text-align:center; padding:24px; color:var(--muted); }
+    .notice {
+      background: #fff8df; border-left: 5px solid var(--yellow);
+      padding: 12px 14px; border-radius: 12px; margin-top: 12px;
+    }
+    @media (max-width: 600px) {
+      main { padding: 12px; }
+      .hero { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="topbar">
+    <div class="brand">🌍 Climate Kids Nigeria</div>
+    <label>
+      <span class="sr-only">Language</span>
+      <select id="languageSelect" aria-label="Language">
+        <option value="en">English</option>
+        <option value="ha">Hausa</option>
+        <option value="yo">Yorùbá</option>
+        <option value="ig">Igbo</option>
+      </select>
+    </label>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <span class="badge" id="badge">Learn • Play • Protect Nigeria</span>
+    <h1 id="title">Climate change made easy for children</h1>
+    <p id="intro">Learn what climate change means, how it affects Nigeria, and what children can do to protect people, plants and animals.</p>
+    <div class="lesson-actions">
+      <button class="btn btn-primary" id="startBtn">Start learning</button>
+      <button class="btn btn-yellow" id="speakBtn">🔊 Read aloud</button>
+    </div>
+    <div class="progress-wrap">
+      <div class="small" id="progressText">Learning progress: 0%</div>
+      <progress id="progressBar" value="0" max="100"></progress>
+    </div>
+    <div class="notice" id="offlineNotice">
+      💡 Tip: after the app is installed and opened online once, the service worker can cache the core files for offline use.
+    </div>
+  </section>
+
+  <section class="grid" id="lessonCards"></section>
+
+  <section class="quiz card">
+    <h2 id="quizTitle">🎯 Climate quiz</h2>
+    <p class="small" id="quizIntro">Choose an answer. Your score is saved on this device.</p>
+    <div id="quizBox"></div>
+  </section>
+
+  <section class="actions card">
+    <h2 id="actionTitle">🌱 My climate actions</h2>
+    <p class="small" id="actionIntro">Tick actions you complete at home or school.</p>
+    <div id="actionList"></div>
+  </section>
+</main>
+
+<footer>
+  Climate Kids Nigeria • Educational starter app • Designed for children
+</footer>
+
+<script>
+const DATA = {
+  en: {
+    badge:"Learn • Play • Protect Nigeria",
+    title:"Climate change made easy for children",
+    intro:"Learn what climate change means, how it affects Nigeria, and what children can do to protect people, plants and animals.",
+    start:"Start learning", speak:"🔊 Read aloud", progress:"Learning progress",
+    quizTitle:"🎯 Climate quiz", quizIntro:"Choose an answer. Your score is saved on this device.",
+    actionTitle:"🌱 My climate actions", actionIntro:"Tick actions you complete at home or school.",
+    lessons:[
+      ["🌍","1. What is climate change?","Climate change means long-term changes in the Earth’s usual temperatures and weather patterns. Human activities such as burning coal, oil and gas add heat-trapping gases to the atmosphere."],
+      ["🔥","2. Why is the Earth getting warmer?","Burning fossil fuels, cutting forests and some farming and industrial activities increase greenhouse gases. These gases trap more heat in the atmosphere."],
+      ["🇳🇬","3. What does this mean for Nigeria?","Nigeria can experience hotter conditions, floods, droughts, changing rainfall, pressure on crops and water supplies, and risks to health and communities. The exact effect differs by location."],
+      ["🌳","4. What can children do?","Plant and care for trees, save electricity, avoid wasting food and water, keep surroundings clean, walk or cycle when practical, and teach friends and family what you learn."],
+      ["☀️","5. Clean energy","Solar power and other low-carbon energy sources can reduce the need to burn fossil fuels. Nigeria has strong solar potential, making renewable energy an important part of climate solutions."],
+      ["🤝","6. Climate and the SDGs","Climate action connects with goals such as good health, quality education, clean water, affordable clean energy, sustainable communities and life on land."],
+    ],
+    questions:[
+      {q:"Which gas group is a major driver of human-caused warming?", options:["Greenhouse gases","Oxygen only","Water in bottles","Sand"], answer:0},
+      {q:"Which action helps save energy?", options:["Leaving lights on all day","Switching off unused lights","Burning plastic","Wasting water"], answer:1},
+      {q:"Which is a climate-related risk in parts of Nigeria?", options:["Flooding","More planets","No seasons anywhere","Extra gravity"], answer:0},
+      {q:"What is one useful role of trees?", options:["They absorb carbon dioxide as they grow","They create plastic","They make the oceans salty","They stop all rainfall"], answer:0},
+      {q:"Which is renewable energy?", options:["Coal","Diesel","Solar energy","Petrol"], answer:2}
+    ],
+    actions:["Switch off lights and fans when not needed","Carry a reusable water bottle","Plant or care for a tree","Keep drains and surroundings free of waste","Tell one friend what you learned today"]
+  },
+  ha: {
+    badge:"Koyi • Yi wasa • Kare Najeriya",
+    title:"Canjin yanayi cikin sauƙi ga yara",
+    intro:"Koyi ma’anar canjin yanayi, yadda yake shafar Najeriya, da abin da yara za su iya yi domin kare mutane, tsirrai da dabbobi.",
+    start:"Fara koyo", speak:"🔊 Karanta da murya", progress:"Ci gaban koyo",
+    quizTitle:"🎯 Tambayar canjin yanayi", quizIntro:"Zaɓi amsa. Za a adana maki a wannan na’urar.",
+    actionTitle:"🌱 Ayyukan kula da yanayi", actionIntro:"Yi alama kan ayyukan da ka yi a gida ko makaranta.",
+    lessons:[
+      ["🌍","1. Menene canjin yanayi?","Canjin yanayi shi ne sauyin zafi da yanayin iska na dogon lokaci. Ayyukan mutane kamar kona man fetur da kwal suna ƙara iskar da ke kama zafi a sararin sama."],
+      ["🔥","2. Me ke sa Duniya ta ƙara zafi?","Kona makamashin burbushin kasa, sare itatuwa da wasu ayyukan noma da masana’antu suna ƙara iskar gas mai kama zafi."],
+      ["🇳🇬","3. Me wannan ke nufi ga Najeriya?","Wasu sassan Najeriya na iya fuskantar ƙarin zafi, ambaliya, fari, sauyin ruwan sama da matsin lamba ga amfanin gona da ruwa."],
+      ["🌳","4. Me yara za su iya yi?","Shuka da kula da itatuwa, rage ɓarnar wuta da ruwa, tsaftace muhalli, da gaya wa abokai da iyali abin da ka koya."],
+      ["☀️","5. Makamashi mai tsafta","Hasken rana da sauran makamashi masu sabuntawa na iya rage dogaro da makamashin da ke fitar da hayaki mai ɗumama duniya."],
+      ["🤝","6. Yanayi da SDGs","Kula da yanayi yana da alaƙa da lafiya, ilimi, ruwa mai tsafta, makamashi mai tsafta, birane masu ɗorewa da kare rayuwar ƙasa."],
+    ],
+    questions:[
+      {q:"Wane rukuni na iskar gas yana da muhimmanci wajen ɗumamar Duniya?", options:["Greenhouse gases","Oxygen kawai","Ruwan kwalba","Yashi"], answer:0},
+      {q:"Wane aiki yana taimakawa wajen adana makamashi?", options:["Barin fitilu a kunne kullum","Kashe fitilun da ba a amfani da su","Kona roba","Zubar da ruwa"], answer:1},
+      {q:"Wanne yana cikin haɗarin da ya shafi yanayi a wasu sassan Najeriya?", options:["Ambaliya","Ƙarin taurari","Rashin yanayi gaba ɗaya","Ƙarin nauyi"], answer:0},
+      {q:"Wace fa'ida itatuwa ke bayarwa?", options:["Suna shan carbon dioxide yayin girma","Suna samar da roba","Suna sa teku ya yi gishiri","Suna hana duk ruwan sama"], answer:0},
+      {q:"Wanne makamashi ne mai sabuntawa?", options:["Kwal","Diesel","Makamashin rana","Fetur"], answer:2}
+    ],
+    actions:["Kashe fitilu da fan idan ba a buƙata","Riƙe kwalban ruwa mai sake amfani","Shuka ko kula da itace","Kare magudanan ruwa daga shara","Faɗa wa aboki abu ɗaya da ka koya yau"]
+  },
+  yo: {
+    badge:"Kọ́ • Ṣeré • Dá Nàìjíríàà sílẹ̀",
+    title:"Iyípadà ojú-ọjọ́ rọrùn fún àwọn ọmọ",
+    intro:"Kọ́ ohun tí iyípadà ojú-ọjọ́ túmọ̀ sí, bí ó ṣe ń kan Nàìjíríà, àti ohun tí ọmọ lè ṣe láti dáàbò bo ènìyàn, ewéko àti ẹranko.",
+    start:"Bẹ̀rẹ̀ ẹ̀kọ́", speak:"🔊 Kà sílẹ̀", progress:"Ìlọsíwájú ẹ̀kọ́",
+    quizTitle:"🎯 Ìbéèrè ojú-ọjọ́", quizIntro:"Yan ìdáhùn. A máa fi àmì rẹ pamọ́ sori ẹrọ yìí.",
+    actionTitle:"🌱 Àwọn ìṣe mi fún ojú-ọjọ́", actionIntro:"Ṣàmì sí àwọn ohun tí o ṣe ní ilé tàbí ní ilé-ẹ̀kọ́.",
+    lessons:[
+      ["🌍","1. Kí ni iyípadà ojú-ọjọ́?","Ó jẹ́ ìyípadà pípẹ́ nínú ooru àti àwọn àpẹẹrẹ ojú-ọjọ́. Síse àwọn iṣẹ́ bíi sísun epo àti èédú ń fi gaasi sínú afẹ́fẹ́ tí ń di ooru mú."],
+      ["🔥","2. Kí ló ń mú ayé gbóná sí i?","Sísun epo fósílì, gígé igi àti àwọn iṣẹ́ ogbin/ile-iṣẹ kan ń mú gaasi tí ń di ooru mú pọ̀ sí i."],
+      ["🇳🇬","3. Kí ni èyí túmọ̀ sí fún Nàìjíríà?","Àwọn apá kan lè ní ooru tó pọ̀, ìkún omi, ọ̀gbẹ́, ìyípadà ojo rọ̀, àti ìṣòro fún irugbin àti omi."],
+      ["🌳","4. Kí ni àwọn ọmọ lè ṣe?","Gbin kí o sì bójú tó igi, fi iná àti omi pamọ́, má ṣe sọ ìdọ̀tí síta, kí o sì kọ́ àwọn ọ̀rẹ́ rẹ."],
+      ["☀️","5. Agbara tó mọ́","Agbara oorun àti àwọn orísun agbara tó ṣeé tún lò lè dín lílo epo fósílì kù."],
+      ["🤝","6. Ojú-ọjọ́ àti SDGs","Ìṣe ojú-ọjọ́ ní ìbáṣepọ̀ pẹ̀lú ìlera, ẹ̀kọ́, omi mímọ́, agbara tó mọ́, àti ìgbésí-ayé lórí ilẹ̀."],
+    ],
+    questions:[
+      {q:"Ẹgbẹ́ gaasi wo ló ṣe pàtàkì nínú ìgbóná tí ènìyàn ń fa?", options:["Greenhouse gases","Afẹ́fẹ́ oxygen nìkan","Omi inú igo","Iyanrìn"], answer:0},
+      {q:"Èwo ló ń ran wa lọwọ láti fi agbara pamọ́?", options:["Fi fitila sílẹ̀ ní gbogbo ọjọ́","Pa fitila tí a kò ń lò","Sun roba","Ṣòfò omi"], answer:1},
+      {q:"Èwo jẹ́ ewu tó ní ìbáṣepọ̀ pẹ̀lú ojú-ọjọ́ ní àwọn apá Nàìjíríà?", options:["Ìkún omi","Àwọn pílánẹ́ẹ̀tì púpọ̀","Ko sí àkókò rárá","Walẹ̀ pọ̀ sí i"], answer:0},
+      {q:"Ọ̀kan lára àwọn anfaani igi ni?", options:["Wọ́n máa ń fa carbon dioxide bí wọ́n ṣe ń dàgbà","Wọ́n ń ṣe roba","Wọ́n ń jẹ́ kí òkun ní iyọ̀","Wọ́n ń dá gbogbo òjò dúró"], answer:0},
+      {q:"Èwo ni agbara tó ṣeé tún lò?", options:["Èédú","Diesel","Agbara oorun","Petrol"], answer:2}
+    ],
+    actions:["Pa fitila àti fan tí a kò nílò","Lo igo omi tí a lè tún lò","Gbin tàbí bójú tó igi","Má ṣe fi ìdọ̀tí pa ọ̀nà omi","Sọ ohun kan tí o kọ́ fún ọ̀rẹ́"]
+  },
+  ig: {
+    badge:"Mụta • Gwuo • Chekwaa Naịjịrịa",
+    title:"Mgbanwe ihu igwe n'ụzọ dị mfe maka ụmụaka",
+    intro:"Mụta ihe mgbanwe ihu igwe pụtara, otú o si emetụta Naịjịrịa, na ihe ụmụaka nwere ike ime iji chebe mmadụ, osisi na anụmanụ.",
+    start:"Malite ịmụ ihe", speak:"🔊 Gụọ n'olu", progress:"Ọganihu mmụta",
+    quizTitle:"🎯 Ajụjụ mgbanwe ihu igwe", quizIntro:"Họrọ azịza. A ga-echekwa akara gị n'ọrụ a.",
+    actionTitle:"🌱 Omume ihu igwe m", actionIntro:"Tinye akara n'ihe ị mere n'ụlọ ma ọ bụ n'ụlọ akwụkwọ.",
+    lessons:[
+      ["🌍","1. Gịnị bụ mgbanwe ihu igwe?","Ọ bụ mgbanwe ogologo oge n'ọkụ na usoro ihu igwe. Ọkụ mmanụ na coal na-eme ka gas ndị na-ejide okpomọkụ bata n'ikuku."],
+      ["🔥","2. Gịnị na-eme ụwa ka ọ na-ekpo ọkụ?", "Ịkpọ mmanụ ọkụ ọkụ, ịkpụ osisi na ụfọdụ ọrụ ugbo na ụlọ ọrụ na-abawanye gas ndị na-ejide okpomọkụ."],
+      ["🇳🇬","3. Kedu ihe nke a pụtara maka Naịjịrịa?", "Ụfọdụ mpaghara nwere ike ihu okpomọkụ karịa, idei mmiri, ụkọ mmiri, mgbanwe mmiri ozuzo na nsogbu maka ihe ubi na mmiri."],
+      ["🌳","4. Kedu ihe ụmụaka nwere ike ime?", "Kụọ ma lekọta osisi, chekwaa ọkụ eletrik na mmiri, debe gburugburu ọcha, ma kọọrọ ndị enyi na ezinụlọ ihe ị mụtara."],
+      ["☀️","5. Ike dị ọcha", "Ike anyanwụ na isi ike ndị a na-emegharị emegharị nwere ike ibelata mkpa ịkpọ mmanụ ọkụ ọkụ."],
+      ["🤝","6. Ihu igwe na SDGs", "Omume ihu igwe metụtara ahụike, agụmakwụkwọ, mmiri dị ọcha, ike dị ọcha, obodo na-adịgide adịgide na ndụ n'ala."],
+    ],
+    questions:[
+      {q:"Kedu ụdị gas dị mkpa n'ịkụ ụwa nke mmadụ na-akpata?", options:["Greenhouse gases","Oxygen naanị","Mmiri karama","Aja"], answer:0},
+      {q:"Kedu ihe na-enyere aka ịchekwa ike?", options:["Ịhapụ ọkụ ka ọ na-enwu mgbe niile","Ịgbanyụọ ọkụ a naghị eji","Ịkpọ plastik ọkụ","Imefusị mmiri"], answer:1},
+      {q:"Kedu nke bụ ihe ize ndụ metụtara ihu igwe n'akụkụ ụfọdụ nke Naịjịrịa?", options:["Idei mmiri","Ụwa ndị ọzọ","Enweghị oge ọ bụla","Graviti na-abawanye"], answer:0},
+      {q:"Otu uru osisi bụ gịnị?", options:["Ha na-amị carbon dioxide ka ha na-etolite","Ha na-emepụta plastik","Ha na-eme ka oke osimiri nwee nnu","Ha na-akwụsị mmiri ozuzo niile"], answer:0},
+      {q:"Kedu nke bụ ike a na-emegharị emegharị?", options:["Coal","Diesel","Ike anyanwụ","Petrol"], answer:2}
+    ],
+    actions:["Gbanyụọ ọkụ na fan mgbe a naghị eji ha","Jiri karama mmiri enwere ike iji ọzọ","Kụọ ma ọ bụ lekọta osisi","Debe drains na gburugburu na-enweghị mkpofu","Gwa enyi otu ihe ị mụtara taa"]
+  }
+};
+
+let lang = localStorage.getItem("ckn_lang") || "en";
+let completed = JSON.parse(localStorage.getItem("ckn_lessons") || "[]");
+let actionsDone = JSON.parse(localStorage.getItem("ckn_actions") || "[]");
+let score = Number(localStorage.getItem("ckn_score") || 0);
+let quizIndex = 0;
+let quizAnswered = false;
+
+function t(){ return DATA[lang]; }
+
+function render(){
+  const d = t();
+  document.getElementById("badge").textContent = d.badge;
+  document.getElementById("title").textContent = d.title;
+  document.getElementById("intro").textContent = d.intro;
+  document.getElementById("startBtn").textContent = d.start;
+  document.getElementById("speakBtn").textContent = d.speak;
+  document.getElementById("quizTitle").textContent = d.quizTitle;
+  document.getElementById("quizIntro").textContent = d.quizIntro;
+  document.getElementById("actionTitle").textContent = d.actionTitle;
+  document.getElementById("actionIntro").textContent = d.actionIntro;
+
+  const lessonCards = document.getElementById("lessonCards");
+  lessonCards.innerHTML = "";
+  d.lessons.forEach((lesson, i)=>{
+    const done = completed.includes(i);
+    const card = document.createElement("article");
+    card.className = "card";
+    card.innerHTML = `
+      <div class="icon">${lesson[0]}</div>
+      <h3>${lesson[1]}</h3>
+      <p class="lesson-content">${lesson[2]}</p>
+      <div class="lesson-actions">
+        <button class="btn ${done ? "btn-secondary":"btn-primary"}" data-lesson="${i}">
+          ${done ? "✓ Completed" : "Mark complete"}
+        </button>
+        <button class="btn btn-secondary" data-speak="${i}">🔊 Listen</button>
+      </div>`;
+    lessonCards.appendChild(card);
+  });
+
+  lessonCards.querySelectorAll("[data-lesson]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const i = Number(btn.dataset.lesson);
+      if (!completed.includes(i)) completed.push(i);
+      localStorage.setItem("ckn_lessons", JSON.stringify(completed));
+      render();
+    });
+  });
+  lessonCards.querySelectorAll("[data-speak]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const i = Number(btn.dataset.speak);
+      speak(d.lessons[i][1] + ". " + d.lessons[i][2]);
+    });
+  });
+
+  renderQuiz();
+  renderActions();
+  updateProgress();
+}
+
+function updateProgress(){
+  const total = t().lessons.length + 5;
+  const done = completed.length + score;
+  const pct = Math.min(100, Math.round((done/total)*100));
+  document.getElementById("progressText").textContent = t().progress + ": " + pct + "%";
+  document.getElementById("progressBar").value = pct;
+}
+
+function renderQuiz(){
+  const box = document.getElementById("quizBox");
+  const qs = t().questions;
+  if (quizIndex >= qs.length) {
+    box.innerHTML = `<p><strong>🎉 ${lang==="en" ? "Great job!" : lang==="ha" ? "Madalla!" : lang==="yo" ? "Ó dára!" : "Ọ dị mma!"}</strong> ${lang==="en" ? "Quiz complete." : ""}</p>
+                     <p class="small">Score: ${score}/${qs.length}</p>
+                     <button class="btn btn-primary" id="retryQuiz">Try again</button>`;
+    document.getElementById("retryQuiz").onclick = ()=>{
+      quizIndex = 0; quizAnswered = false; score = 0;
+      localStorage.setItem("ckn_score","0"); render();
+    };
+    return;
+  }
+  const item = qs[quizIndex];
+  box.innerHTML = `<p><strong>${quizIndex+1}/${qs.length}</strong> — ${item.q}</p>` +
+    item.options.map((op,i)=>`<button class="btn quiz-option" data-opt="${i}">${op}</button>`).join("");
+  box.querySelectorAll("[data-opt]").forEach(btn=>{
+    btn.onclick = ()=>{
+      if (quizAnswered) return;
+      quizAnswered = true;
+      const selected = Number(btn.dataset.opt);
+      if (selected === item.answer) {
+        btn.classList.add("correct");
+        score += 1;
+        localStorage.setItem("ckn_score", String(score));
+      } else {
+        btn.classList.add("wrong");
+        box.querySelector(`[data-opt="${item.answer}"]`).classList.add("correct");
+      }
+      setTimeout(()=>{
+        quizIndex += 1;
+        quizAnswered = false;
+        renderQuiz();
+        updateProgress();
+      }, 700);
+    };
+  });
+}
+
+function renderActions(){
+  const d = t();
+  const list = document.getElementById("actionList");
+  list.innerHTML = d.actions.map((a,i)=>{
+    const checked = actionsDone.includes(i) ? "checked" : "";
+    return `<div class="action-row">
+      <input type="checkbox" id="action${i}" data-action="${i}" ${checked}>
+      <label for="action${i}">${a}</label>
+    </div>`;
+  }).join("");
+  list.querySelectorAll("[data-action]").forEach(cb=>{
+    cb.onchange = ()=>{
+      const i = Number(cb.dataset.action);
+      if (cb.checked && !actionsDone.includes(i)) actionsDone.push(i);
+      if (!cb.checked) actionsDone = actionsDone.filter(x=>x!==i);
+      localStorage.setItem("ckn_actions", JSON.stringify(actionsDone));
+    };
+  });
+}
+
+function speak(text){
+  if (!("speechSynthesis" in window)) {
+    alert("Speech is not supported by this browser.");
+    return;
+  }
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  const voices = speechSynthesis.getVoices();
+  const preferred = voices.find(v => v.lang.toLowerCase().startsWith(lang));
+  if (preferred) u.voice = preferred;
+  speechSynthesis.speak(u);
+}
+
+document.getElementById("languageSelect").value = lang;
+document.getElementById("languageSelect").addEventListener("change", e=>{
+  lang = e.target.value;
+  localStorage.setItem("ckn_lang", lang);
+  render();
+});
+
+document.getElementById("startBtn").addEventListener("click", ()=>{
+  document.getElementById("lessonCards").scrollIntoView({behavior:"smooth"});
+});
+document.getElementById("speakBtn").addEventListener("click", ()=>{
+  const d = t();
+  speak(d.title + ". " + d.intro);
+});
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", ()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
+
+render();
+</script>
+</body>
+</html>
